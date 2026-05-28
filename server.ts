@@ -1,5 +1,7 @@
 import express from "express";
 import path from "path";
+import fs from "fs";
+import cors from "cors";
 import { createServer as createViteServer } from "vite";
 import { WebSocketServer } from 'ws';
 import { spawn, execSync } from 'child_process';
@@ -9,7 +11,53 @@ import localtunnel from 'localtunnel';
 async function startServer() {
   const app = express();
   const PORT = 3000;
+  
+  // Enable CORS for all routes so the GitHub pages domain can access it
+  app.use(cors());
   app.use(express.json());
+
+  // Database path
+  const DB_PATH = path.join(process.cwd(), "posts.json");
+  // Initialize db if absent
+  if (!fs.existsSync(DB_PATH)) {
+      const INITIAL_POSTS = [
+          { id: 1, author: 'Manny Cololot Ango', title: 'Welcome to the Exabyte Relay', content: 'This forum uses internet connectivity routing instead of local RAM to search through the massive exabyte database. Welcome to zfastdsin.qzz.io.', time: Date.now() },
+      ];
+      fs.writeFileSync(DB_PATH, JSON.stringify(INITIAL_POSTS, null, 2));
+  }
+
+  // Get posts
+  app.get("/api/posts", (req, res) => {
+      try {
+          const data = fs.readFileSync(DB_PATH, "utf8");
+          res.json(JSON.parse(data));
+      } catch (e) {
+          res.status(500).json({ error: "Failed to read database" });
+      }
+  });
+
+  // Create post
+  app.post("/api/posts", (req, res) => {
+      try {
+          const posts = JSON.parse(fs.readFileSync(DB_PATH, "utf8"));
+          const { author, title, content } = req.body;
+          if (!author || !title || !content) {
+              return res.status(400).json({ error: "Missing fields" });
+          }
+          const newPost = {
+              id: Date.now(),
+              author,
+              title,
+              content,
+              time: Date.now()
+          };
+          posts.unshift(newPost);
+          fs.writeFileSync(DB_PATH, JSON.stringify(posts, null, 2));
+          res.json(newPost);
+      } catch (e) {
+          res.status(500).json({ error: "Failed to save post" });
+      }
+  });
 
   // Aggressive cleanup on startup
   try {

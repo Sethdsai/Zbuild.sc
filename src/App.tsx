@@ -28,7 +28,7 @@ export default function App() {
   const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
-    fetch('/api/posts')
+    fetch('https://ais-dev-lquyr535coufvusdgmh55r-350735674854.asia-east1.run.app/api/posts')
         .then(res => res.json())
         .then(data => {
             if (Array.isArray(data)) setPosts(data);
@@ -36,7 +36,7 @@ export default function App() {
         .catch(err => console.error("Failed to load posts", err));
 
     // Anti-freeze: Keep connection open so the server doesn't get throttled/suspended
-    const evtSource = new EventSource("/api/antifreeze");
+    const evtSource = new EventSource("https://ais-dev-lquyr535coufvusdgmh55r-350735674854.asia-east1.run.app/api/antifreeze");
     evtSource.onmessage = (e) => {
         // Keeps container alive
     };
@@ -54,7 +54,7 @@ export default function App() {
   const handlePost = (e: React.FormEvent) => {
     e.preventDefault();
     if (postTitle && postContent && botVerified) {
-      fetch('/api/posts', {
+      fetch('https://ais-dev-lquyr535coufvusdgmh55r-350735674854.asia-east1.run.app/api/posts', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
